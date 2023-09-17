@@ -1,23 +1,110 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
-<canvas id="myCanvas" style="border:1px solid #000000;"></canvas>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Game of Life</title>
+	<style>
+		body {
+			margin: 0;
+			overflow: hidden;
+		}
+
+		canvas {
+			display: block;
+			background: black;
+		}
+	</style>
+</head>
+
+<body>
+	<canvas id="gameCanvas"></canvas>
+
+	<script>
+		const canvas = document.getElementById('gameCanvas');
+		const ctx = canvas.getContext('2d');
+		canvas.width = window.innerWidth;
+		canvas.height = window.innerHeight;
+
+		const resolution = 3;
+		const cols = Math.floor(canvas.width / resolution);
+		const rows = Math.floor(canvas.height / resolution);
+
+		let cells = Array(rows).fill(null)
+			.map(() => Array(cols).fill(null)
+				.map(() => Math.floor(Math.random() * 2)));
+
+		function initialize() {
+			cells = Array(rows).fill(null)
+				.map(() => Array(cols).fill(null)
+					.map(() => Math.floor(Math.random() * 2)));
+		}
+
+		document.addEventListener('click', () => {
+			initialize();
+		});
+
+		function drawCells() {
+			ctx.fillStyle = 'black';
+			ctx.fillRect(0, 0, canvas.width, canvas.height);
+			for (let x = 0; x < cols; x++) {
+				for (let y = 0; y < rows; y++) {
+					const cellValue = cells[y][x];
+					ctx.fillStyle = cellValue ? 'white' : 'black';
+					ctx.fillRect(x * resolution, y * resolution, resolution, resolution);
+				}
+			}
+		}
+
+		function updateCells() {
+			const newCells = cells.map(arr => [...arr]);
+			for (let x = 0; x < cols; x++) {
+				for (let y = 0; y < rows; y++) {
+					const neighbors = getNeighbors(cells, x, y);
+					const currentCell = cells[y][x];
+					newCells[y][x] = getNewCellValue(currentCell, neighbors);
+				}
+			}
+			cells = newCells;
+		}
+
+		function getNeighbors(cells, x, y) {
+			const neighbors = [];
+			const rows = cells.length;
+			const cols = cells[0].length;
+
+			for (let i = -1; i < 2; i++) {
+				for (let j = -1; j < 2; j++) {
+					if (i === 0 && j === 0) continue;
+					const newX = x + i;
+					const newY = y + j;
+
+					if (newX >= 0 && newY >= 0 && newX < cols && newY < rows) {
+						neighbors.push(cells[newY][newX]);
+					}
+				}
+			}
+			return neighbors;
+		}
+
+		function getNewCellValue(cell, neighbors) {
+			const alive = neighbors.filter(Boolean).length;
+			if (cell && (alive < 2 || alive > 3)) return false;
+			if (!cell && alive === 3) return true;
+			return cell;
+		}
+
+		function step() {
+			drawCells();
+			updateCells();
+			requestAnimationFrame(step);
+		}
+
+		step();
 
 
-<p id="demo"></p>
-<script>
-var w = window.innerWidth
-|| document.documentElement.clientWidth
-|| document.body.clientWidth;
-
-var h = window.innerHeight
-|| document.documentElement.clientHeight
-|| document.body.clientHeight;
-
-var x = document.getElementById("demo");
-x.innerHTML = "Browser inner window width: " + w + ", height: " + h + ".";
-</script>
-
-<script type="text/javascript" src="js/hakan.js"></script>
+	</script>
+</body>
 
 </html>
